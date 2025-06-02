@@ -1,12 +1,10 @@
 import pymysql.cursors
-# Connect to the database
-
 
 CONNECTION = pymysql.connect(
-    host='localhost',
+    host='127.0.0.1',
     user='root',
-    password='root123',
-    port=3307,
+    password='Rayen2001',
+    port=3306,
     database='stock',
     charset='utf8mb4',
     cursorclass=pymysql.cursors.DictCursor

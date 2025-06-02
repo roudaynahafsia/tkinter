@@ -22,168 +22,297 @@ class ProduitView(Frame):
         self.selected_id = None  # ID du produit sélectionné
     
     def configure_styles(self):
-        """Configure les styles visuels"""
+        """Configure les styles visuels modernes"""
         self.style = ttk.Style()
         self.style.theme_use('clam')
         
         # Palette de couleurs moderne
-        colors = {
-            'primary': '#3498db',
-            'success': '#2ecc71',
-            'danger': '#e74c3c',
-            'warning': '#f39c12',
-            'bg': '#f5f6fa',
-            'header': '#2f3640',
-            'text': '#2c3e50'
+        self.colors = {
+            'primary': '#212529',
+            'success': '#28a745',
+            'danger': '#dc3545',
+            'warning': '#ffc107',
+            'bg': '#f5f7fa',
+            'header': '#2b2d42',
+            'footer': '#2b2d42',
+            'text': '#212529',
+            'light_text': '#ffffff',
+            'accent': '#e9ecef'
         }
         
-        # Configuration des styles
-        self.style.configure('TFrame', background=colors['bg'])
-        self.style.configure('Header.TFrame', background=colors['header'])
+        # Styles des frames
+        self.style.configure('Main.TFrame', background=self.colors['bg'])
+        self.style.configure('Header.TFrame', background=self.colors['header'])
+        self.style.configure('Footer.TFrame', background=self.colors['footer'])
+        self.style.configure('Card.TFrame', background='white', relief='flat')
+        
+        # Styles des labels
         self.style.configure('Header.TLabel', 
-                          background=colors['header'], 
-                          foreground='white',
-                          font=('Helvetica', 14, 'bold'))
+                           background=self.colors['header'], 
+                           foreground=self.colors['light_text'],
+                           font=('Segoe UI', 16, 'bold'))
+        self.style.configure('Footer.TLabel', 
+                           background=self.colors['footer'], 
+                           foreground=self.colors['light_text'],
+                           font=('Segoe UI', 10))
+        self.style.configure('Section.TLabel',
+                           font=('Segoe UI', 12, 'bold'),
+                           foreground=self.colors['text'])
         
         # Styles des boutons
         self.style.configure('Primary.TButton', 
-                          background=colors['primary'],
-                          foreground='white',
-                          font=('Helvetica', 10, 'bold'),
-                          padding=8)
-        
+                           background=self.colors['primary'],
+                           foreground='white',
+                           font=('Segoe UI', 11, 'bold'),
+                           borderwidth=0,
+                           padding=8)
         self.style.map('Primary.TButton',
-                     background=[('active', '#2980b9')])
+                      background=[('active', '#212529')])
         
         self.style.configure('Success.TButton', 
-                          background=colors['success'],
-                          foreground='white',
-                          padding=8)
+                           background=self.colors['success'],
+                           foreground='white',
+                           font=('Segoe UI', 11, 'bold'),
+                           borderwidth=0,
+                           padding=8)
+        self.style.map('Success.TButton',
+                      background=[('active', '#218838')])
         
         self.style.configure('Danger.TButton', 
-                          background=colors['danger'],
-                          foreground='white',
-                          padding=8)
-    
+                           background=self.colors['danger'],
+                           foreground='white',
+                           font=('Segoe UI', 11, 'bold'),
+                           borderwidth=0,
+                           padding=8)
+        self.style.map('Danger.TButton',
+                      background=[('active', '#c82333')])
+        
+        # Styles pour Entry et Combobox
+        self.style.configure('Modern.TEntry',
+                           fieldbackground='white',
+                           foreground=self.colors['text'],
+                           padding=10,
+                           font=('Segoe UI', 11))
+        self.style.configure('Modern.TCombobox',
+                           fieldbackground='white',
+                           foreground=self.colors['text'],
+                           padding=10,
+                           font=('Segoe UI', 11))
+        
+        # Styles pour Treeview
+        self.style.configure('Modern.Treeview',
+                           font=('Segoe UI', 11),
+                           background='white',
+                           fieldbackground='white',
+                           foreground=self.colors['text'],
+                           rowheight=35,
+                           bordercolor=self.colors['accent'])
+        
+        self.style.configure('Modern.Treeview.Heading',
+                           font=('Segoe UI', 11, 'bold'),
+                           background=self.colors['accent'],
+                           foreground=self.colors['text'],
+                           relief='flat')
+        
+        self.style.map('Modern.Treeview',
+                      background=[('selected', self.colors['primary'])],
+                      foreground=[('selected', 'white')])
+
     def build_interface(self):
         """Construit l'interface complète"""
-        self.setup_header()
-        self.setup_main_frame()
-        self.setup_footer()
+        # Canvas pour fond dégradé within self (not self.root)
+        self.canvas = Canvas(self, bg=self.colors['bg'], highlightthickness=0)
+        self.canvas.pack(fill=BOTH, expand=True)
+        self._create_gradient()
         
-    def setup_header(self):
+        # Conteneur principal
+        container = ttk.Frame(self.canvas, style='Main.TFrame')
+        container.pack(fill='both', expand=True, padx=20, pady=20)
+        
+        self.setup_header(container)
+        self.setup_main_frame(container)
+        self.setup_footer(container)
+        
+    def _create_gradient(self):
+        """Crée un fond dégradé dynamiquement."""
+        self.canvas.update_idletasks()
+        width = self.canvas.winfo_width()
+        height = self.canvas.winfo_height()
+        if width <= 1 or height <= 1:  # Fallback if not yet rendered
+            width, height = 1000, 700
+        colors = ['#2b2d42', '#2b2d42']
+        
+        for i in range(height):
+            r = int(43 + (245-43) * i/height)
+            g = int(45 + (247-45) * i/height)
+            b = int(66 + (250-66) * i/height)
+            color = f"#{r:02x}{g:02x}{b:02x}"
+            self.canvas.create_line(0, i, width, i, fill=color)
+
+    def setup_header(self, container):
         """Configure l'en-tête"""
-        header = ttk.Frame(self.root, style='Header.TFrame')
-        header.pack(fill=X, pady=(0, 20))
+        header = ttk.Frame(container, style='Header.TFrame')
+        header.pack(fill=X, ipady=10)
         
         ttk.Label(header, 
-                text="GESTION DES PRODUITS", 
-                style='Header.TLabel').pack(pady=10)
+                 text="GESTION DES PRODUITS", 
+                 style='Header.TLabel').pack(side=LEFT, padx=20)
     
-    def setup_main_frame(self):
-     """Configure la zone principale"""
-     main_frame = ttk.Frame(self.root)
-     main_frame.pack(fill=BOTH, expand=True, padx=20, pady=10)
-    
-    # Formulaire
-     form_frame = ttk.Frame(main_frame)
-     form_frame.pack(fill=X, pady=(0, 20))
-    
-     ttk.Label(form_frame, 
-              text="Formulaire Produit",
-              font=('Helvetica', 12, 'bold')).grid(row=0, column=0, columnspan=2, sticky=W, pady=(0, 10))
-    
-    # Champs du formulaire
-     fields = [
-        ("Nom", self.nom),
-        ("Quantité", self.quantite),
-        ("Prix", self.prix),
-        ("Date Expiration", self.date_expiration),
-        ("Catégorie", self.categorie)
-     ]
-    
-     for i, (label, var) in enumerate(fields, start=1):
-        ttk.Label(form_frame, text=label).grid(row=i, column=0, padx=5, pady=5, sticky=W)
+    def setup_main_frame(self, container):
+        """Configure la zone principale"""
+        main_frame = ttk.Frame(container, style='Card.TFrame', padding=20)
+        main_frame.pack(fill=BOTH, expand=True, pady=20)
+        main_frame.configure(relief='raised', borderwidth=2)
         
-        if label == "Catégorie":
-            entry = ttk.Combobox(form_frame, 
+        # Section formulaire
+        form_frame = ttk.Frame(main_frame, style='Card.TFrame', padding=15)
+        form_frame.pack(fill=X, pady=(0, 20))
+        
+        ttk.Label(form_frame, 
+                 text="FORMULAIRE PRODUIT", 
+                 style='Section.TLabel').pack(anchor=W, pady=(0, 10))
+        
+        # Champs du formulaire
+        fields = [
+            ("Nom", self.nom, False),
+            ("Quantité", self.quantite, False),
+            ("Prix", self.prix, False),
+            ("Date d'Expiration", self.date_expiration, False),
+            ("Catégorie", self.categorie, True)
+        ]
+        
+        self.entries = {}
+        for label, var, is_combobox in fields:
+            # Sous-frame pour chaque champ
+            field_frame = ttk.Frame(form_frame)
+            field_frame.pack(fill=X, pady=5)
+            
+            ttk.Label(field_frame, 
+                     text=label,
+                     font=('Segoe UI', 11),
+                     width=15).pack(side=LEFT, padx=10)
+            
+            if is_combobox:
+                entry = ttk.Combobox(field_frame, 
+                                    textvariable=var,
+                                    values=self.get_categories(),
+                                    style='Modern.TCombobox',
+                                    state='readonly')
+            else:
+                entry = ttk.Entry(field_frame, 
                                  textvariable=var,
-                                 values=self.get_categories(),
-                                 state='readonly')
-        else:
-            entry = ttk.Entry(form_frame, textvariable=var)
+                                 style='Modern.TEntry')
+            
+            entry.pack(side=LEFT, fill=X, expand=True, padx=10)
+            self.entries[label] = entry
+            var.trace_add("write", lambda *args, lbl=label: self._validate_field(lbl))
         
-        entry.grid(row=i, column=1, padx=5, pady=5, sticky=EW)
+        # Boutons d'action
+        btn_frame = ttk.Frame(form_frame)
+        btn_frame.pack(fill=X, pady=10)
+        
+        self.btn_save = ttk.Button(btn_frame, 
+                                  text="ENREGISTRER",
+                                  style='Success.TButton',
+                                  command=self.save)
+        self.btn_save.pack(side=LEFT, padx=5)
+        self._bind_button_animations(self.btn_save)
+        
+        self.btn_update = ttk.Button(btn_frame, 
+                                    text="MODIFIER",
+                                    style='Primary.TButton',
+                                    state=DISABLED,
+                                    command=self.update)
+        self.btn_update.pack(side=LEFT, padx=5)
+        self._bind_button_animations(self.btn_update)
+        
+        self.btn_delete = ttk.Button(btn_frame, 
+                                    text="SUPPRIMER",
+                                    style='Danger.TButton',
+                                    command=self.delete)
+        self.btn_delete.pack(side=LEFT, padx=5)
+        self._bind_button_animations(self.btn_delete)
+        
+        self.btn_clear = ttk.Button(btn_frame, 
+                                   text="NOUVEAU",
+                                   style='Primary.TButton',
+                                   command=self.clear_form)
+        self.btn_clear.pack(side=LEFT, padx=5)
+        self._bind_button_animations(self.btn_clear)
+        
+        # Section tableau
+        table_frame = ttk.Frame(main_frame, style='Card.TFrame', padding=15)
+        table_frame.pack(fill=BOTH, expand=True)
+        
+        ttk.Label(table_frame, 
+                 text="LISTE DES PRODUITS", 
+                 style='Section.TLabel').pack(anchor=W, pady=(0, 10))
+        
+        self.tree = ttk.Treeview(table_frame, 
+                                columns=('id', 'nom', 'quantite', 'prix', 'expiration', 'categorie'),
+                                show='headings',
+                                style='Modern.Treeview')
+        
+        columns = [
+            ('id', 'ID', 80, CENTER),
+            ('nom', 'Nom', 200, W),
+            ('quantite', 'Quantité', 100, CENTER),
+            ('prix', 'Prix', 100, CENTER),
+            ('expiration', "Date d'Expiration", 120, W),
+            ('categorie', 'Catégorie', 150, W)
+        ]
+        
+        for col_id, text, width, anchor in columns:
+            self.tree.heading(col_id, text=text)
+            self.tree.column(col_id, width=width, anchor=anchor)
+        
+        self.tree.pack(fill=BOTH, expand=True)
+        self.tree.bind('<<TreeviewSelect>>', self.on_select)
+        
+        scrollbar = ttk.Scrollbar(table_frame, orient=VERTICAL, command=self.tree.yview)
+        self.tree.configure(yscroll=scrollbar.set)
+        scrollbar.pack(side=RIGHT, fill=Y)
+        
+        self.load_data()
     
-    # Boutons d'action
-     btn_frame = ttk.Frame(form_frame)
-     btn_frame.grid(row=len(fields) + 1, column=0, columnspan=2, pady=10)
-    
-     self.btn_save = ttk.Button(btn_frame, 
-                               text="Enregistrer",
-                               style='Success.TButton',
-                               command=self.save)
-     self.btn_save.pack(side=LEFT, padx=5)
-    
-     self.btn_update = ttk.Button(btn_frame, 
-                                 text="Modifier",
-                                 style='Primary.TButton',
-                                 state=DISABLED,
-                                 command=self.update)
-     self.btn_update.pack(side=LEFT, padx=5)
-    
-     ttk.Button(btn_frame, 
-               text="Supprimer",
-               style='Danger.TButton',
-               command=self.delete).pack(side=LEFT, padx=5)
-    
-     ttk.Button(btn_frame, 
-               text="Nouveau",
-               command=self.clear_form).pack(side=LEFT, padx=5)
-    
-    # Tableau
-     table_frame = ttk.Frame(main_frame)
-     table_frame.pack(fill=BOTH, expand=True)
-    
-     ttk.Label(table_frame, 
-              text="Liste des Produits",
-              font=('Helvetica', 12, 'bold')).pack(anchor=W, pady=(0, 10))
-    
-     self.tree = ttk.Treeview(table_frame, 
-                             columns=('id', 'nom', 'quantite', 'prix', 'expiration', 'categorie'),
-                             show='headings')
-    
-     columns = [
-        ('id', 'ID', 50),
-        ('nom', 'Nom', 200),
-        ('quantite', 'Quantité', 100),
-        ('prix', 'Prix', 100),
-        ('expiration', 'Expiration', 120),
-        ('categorie', 'Catégorie', 150)
-     ]
-    
-     for col_id, text, width in columns:
-        self.tree.heading(col_id, text=text)
-        self.tree.column(col_id, width=width)
-    
-     self.tree.pack(fill=BOTH, expand=True)
-     self.tree.bind('<<TreeviewSelect>>', self.on_select)
-      
-     scrollbar = ttk.Scrollbar(table_frame, orient=VERTICAL, command=self.tree.yview)
-     self.tree.configure(yscroll=scrollbar.set)
-     scrollbar.pack(side=RIGHT, fill=Y)
-    
-     self.load_data()
-
-    
-    def setup_footer(self):
+    def setup_footer(self, container):
         """Configure le pied de page"""
-        footer = ttk.Frame(self.root)
-        footer.pack(fill=X, pady=(20, 0))
+        footer = ttk.Frame(container, style='Footer.TFrame')
+        footer.pack(fill=X, ipady=5)
         
         ttk.Label(footer, 
-                text="© 2023 Système de Gestion - Tous droits réservés",
-                font=('Helvetica', 9)).pack(pady=10)
+                 text="© 2025 Système de Gestion des Produits - Tous droits réservés",
+                 style='Footer.TLabel').pack(side=RIGHT, padx=20)
+    
+    def _bind_button_animations(self, button):
+        """Ajoute des animations au survol des boutons"""
+        button.bind("<Enter>", lambda e: button.configure(style=button.cget("style").replace("TButton", "Outline.TButton")))
+        button.bind("<Leave>", lambda e: button.configure(style=button.cget("style").replace("Outline.TButton", "TButton")))
+    
+    def _validate_field(self, field_name):
+        """Validation en temps réel des champs avec retour visuel"""
+        value = self.entries[field_name]["textvariable"].get().strip()
+        entry = self.entries[field_name]
+        
+        if field_name == "Nom":
+            is_valid = bool(value)
+        elif field_name == "Quantité":
+            try:
+                is_valid = int(value) >= 0
+            except:
+                is_valid = False
+        elif field_name == "Prix":
+            try:
+                is_valid = float(value) > 0
+            except:
+                is_valid = False
+        elif field_name == "Catégorie":
+            is_valid = bool(value)
+        else:  # Date d'Expiration
+            is_valid = True  # Champ optionnel
+        
+        entry.configure(style='Modern.TEntry' if not field_name == "Catégorie" else 'Modern.TCombobox')
+        self.style.configure(entry.cget("style"), bordercolor=self.colors['success'] if is_valid else self.colors['danger'])
     
     def get_categories(self):
         """Récupère la liste des catégories"""
@@ -220,7 +349,6 @@ class ProduitView(Frame):
             self.date_expiration.set(values[4])
             self.categorie.set(values[5])
             
-            # Activer le bouton Modifier
             self.btn_update.state(['!disabled'])
             self.btn_save.state(['disabled'])
     
@@ -233,11 +361,9 @@ class ProduitView(Frame):
         self.date_expiration.set('')
         self.categorie.set('')
         
-        # Réactiver Enregistrer, désactiver Modifier
         self.btn_save.state(['!disabled'])
         self.btn_update.state(['disabled'])
         
-        # Désélectionner dans le tableau
         self.tree.selection_remove(self.tree.selection())
     
     def validate_form(self):
@@ -284,7 +410,7 @@ class ProduitView(Frame):
         )
         
         if result == 1:
-            showinfo("Succès", "Produit enregistré")
+            showinfo("Succès", "Produit enregistré avec succès")
             self.clear_form()
             self.load_data()
         else:
@@ -311,7 +437,7 @@ class ProduitView(Frame):
         )
         
         if result == 1:
-            showinfo("Succès", "Produit mis à jour")
+            showinfo("Succès", "Produit mis à jour avec succès")
             self.clear_form()
             self.load_data()
         else:
@@ -323,11 +449,11 @@ class ProduitView(Frame):
             showwarning("Attention", "Aucun produit sélectionné")
             return
         
-        if askyesno("Confirmer", "Supprimer ce produit?"):
+        if askyesno("Confirmer", "Supprimer ce produit ?"):
             result = Produit.delete(self.selected_id)
             
             if result == 1:
-                showinfo("Succès", "Produit supprimé")
+                showinfo("Succès", "Produit supprimé avec succès")
                 self.clear_form()
                 self.load_data()
             else:
